@@ -96,6 +96,32 @@ public class DoubleArrayTrieImplTest extends TestCase {
         file.deleteOnExit();
         {
             TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+
+            try {
+                builder.load(null);
+                fail("");
+            } catch (IllegalArgumentException e ){
+                assertEquals("The file is null.", e.getMessage());
+            } catch (Exception e){
+                fail("");
+            }
+        }
+
+        {
+            TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+
+            try {
+                builder.load(new File("src"));
+                fail("");
+            } catch (IOException e ){
+
+            } catch (Exception e){
+                fail("");
+            }
+        }
+
+        {
+            TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
             List<String> keys = new ArrayList<String>();
             keys.add("あり");
             keys.add("ありがとう");
@@ -291,4 +317,43 @@ public class DoubleArrayTrieImplTest extends TestCase {
 
     }
 
+    public void testBuild07(){
+        TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+        List<String> keys = new ArrayList<String>();
+        keys.add("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123495");
+        keys.add("あri");
+        keys.add("あriga");
+        Trie trie = builder.build(keys);
+        assertEquals(true, trie.lookup("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123495") > 0);
+        assertEquals(true, trie.lookup("あri") > 0);
+        assertEquals(true, trie.lookup("あriga") > 0);
+
+
+    }
+
+    public void testNumberOfFreeNodes(){
+        TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+        List<String> keys = new ArrayList<String>();
+        keys.add("a");
+        keys.add("abc");
+        keys.add("abde");
+
+        Trie trie = builder.build(keys);
+        assertEquals(true, trie.numberOfFreeNodes() > 0);
+    }
+
+    public void testTailMatch(){
+        TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+        List<String> keys = new ArrayList<String>();
+        keys.add("a");
+        keys.add("b");
+        keys.add("ccc");
+        keys.add("cccccck");
+
+
+        Trie trie = builder.build(keys);
+        assertEquals(true, trie.lookup("cccccc") == Trie.UNKNOWN_ID);
+        assertEquals(true, trie.lookup("cccc") == Trie.UNKNOWN_ID);
+        assertEquals(true, trie.lookup("ccc") > 0);
+    }
 }

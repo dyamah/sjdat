@@ -239,12 +239,14 @@ public class DoubleArrayTrieImpl implements Trie {
             assert(begin < end);
             assert(sequence != null);
             int len = end - begin + 1;
-            if (begin_ + len > sequence_.length){
-                int[] x = new int[(int)((begin_ + len) * 4)];
-                System.err.println("!!!! tail extention !!!!");
-                System.arraycopy(sequence_, 0, x, 0, sequence_.length);
-                sequence_ = x ;
-            }
+
+            assert(begin_ + len <= sequence_.length);
+//            if (begin_ + len > sequence_.length){
+//                int[] x = new int[(int)((begin_ + len) * 4)];
+//                System.err.println("!!!! tail extention !!!!");
+//                System.arraycopy(sequence_, 0, x, 0, sequence_.length);
+//                sequence_ = x ;
+//            }
             int b = begin_ ;
             for(int i = begin ; i < end; i++)
                 sequence_[begin_++] = sequence[i];
@@ -509,6 +511,7 @@ public class DoubleArrayTrieImpl implements Trie {
             int start = first_ ;
             int base = 1;
 
+            //assert(start - children.get(0) > 0);
             while (start - children.get(0) < 1){
                 start = free.next();
                 free.decode(nodes_[start]);
