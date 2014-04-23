@@ -137,7 +137,7 @@ public class DoubleArrayTrieImplTest extends TestCase {
             builder.build(keys);
             fail("");
         } catch (IllegalArgumentException  e){
-            assertEquals("The list of keys has not been sorted yet, or some duplications have been found.", e.getMessage());
+            assertEquals("The list of keys has not been sorted yet, some duplications have been found, or some keys are empty.", e.getMessage());
         } catch (Exception e){
             fail("");
         }
@@ -152,7 +152,22 @@ public class DoubleArrayTrieImplTest extends TestCase {
             builder.build(null);
             fail("");
         } catch (IllegalArgumentException  e){
-            assertEquals("The list of keys has not been sorted yet, or some duplications have been found.", e.getMessage());
+            assertEquals("The list of keys has not been sorted yet, some duplications have been found, or some keys are empty.", e.getMessage());
+        } catch (Exception e){
+            fail("");
+        }
+
+        try {
+            List<String> keys = new ArrayList<String>();
+            keys.add("");
+            keys.add("abc");
+            keys.add("abcd");
+            keys.add("cc");
+            builder.build(keys);
+            builder.build(null);
+            fail("");
+        } catch (IllegalArgumentException  e){
+            assertEquals("The list of keys has not been sorted yet, some duplications have been found, or some keys are empty.", e.getMessage());
         } catch (Exception e){
             fail("");
         }
@@ -246,20 +261,16 @@ public class DoubleArrayTrieImplTest extends TestCase {
         TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
         List<String> keys = new ArrayList<String>();
         keys.add("");
-        Trie trie = builder.build(keys);
-        assertEquals( 0, trie.numberOfKeys());
-        assertEquals( true, trie.numberOfNodes() >= 2);
-        assertEquals( true,  trie.lookup("abac") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("bab") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("cc")  == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("ccc") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup(null) == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("abacc") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("abace") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("z") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("za") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("az") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("abaceb") == Trie.UNKNOWN_ID);
+
+        try {
+            builder.build(keys);
+            fail("");
+        } catch (IllegalArgumentException e ){
+            assertEquals("The list of keys has not been sorted yet, some duplications have been found, or some keys are empty.", e.getMessage());
+        } catch (Exception e){
+            fail("");
+        }
+
     }
 
     public void testBuild06(){
@@ -268,24 +279,16 @@ public class DoubleArrayTrieImplTest extends TestCase {
         keys.add("");
         keys.add("abc");
         keys.add("abde");
-        Trie trie = builder.build(keys);
-        assertEquals( 2, trie.numberOfKeys());
-        assertEquals( true, trie.numberOfNodes() >= 2);
-        assertEquals( true,  trie.lookup("abde") > 0);
-        assertEquals( true,  trie.lookup("abc") > 0);
-        assertEquals( true,  trie.lookup("abc") != trie.lookup("abde"));
 
-        assertEquals( true,  trie.lookup("abac") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("bab") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("cc")  == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("ccc") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup(null) == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("abacc") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("abace") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("z") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("za") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("az") == Trie.UNKNOWN_ID);
-        assertEquals( true,  trie.lookup("abaceb") == Trie.UNKNOWN_ID);
+        try {
+            builder.build(keys);
+            fail("");
+        } catch (IllegalArgumentException e ){
+            assertEquals("The list of keys has not been sorted yet, some duplications have been found, or some keys are empty.", e.getMessage());
+        } catch (Exception e){
+            fail("");
+        }
+
     }
 
 }
