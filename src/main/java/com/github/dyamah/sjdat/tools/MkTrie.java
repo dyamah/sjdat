@@ -14,7 +14,7 @@ import com.github.dyamah.sjdat.Trie;
 import com.github.dyamah.sjdat.TrieBuilder;
 import com.github.dyamah.sjdat.impl.DoubleArrayTrieImpl;
 
-public class mktrie {
+public class MkTrie {
 
     static BenchMark bm = new BenchMark();
 
@@ -85,7 +85,7 @@ public class mktrie {
      */
     public static void main(String[] args) {
         if (args.length < 2){
-            System.err.println("usage: com.github.dyamah.sjdat.tools.mktrie input output");
+            System.err.println("usage: com.github.dyamah.sjdat.tools.MkTrie input output");
             System.exit(1);
         }
         bm.showHeader();
