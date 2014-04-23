@@ -257,7 +257,7 @@ public class DoubleArrayTrieImpl implements Trie {
          * @param begin コード列の開始位置
          * @param end コード列の終了位置
          * @param sequence コード列
-         * @return マッチしたらコード列固有のID,マッチしなかったらUNKNOWN_ID(-1)を返す
+         * @return マッチしたらtrue、それ以外はfalse
          */
         boolean match(int head, int begin, int end, int[] sequence ){
             assert(head >= 0);
@@ -276,15 +276,28 @@ public class DoubleArrayTrieImpl implements Trie {
         }
     }
 
-
-
+    /**
+     * 静的ダブル配列の構築クラス
+     * @author Hiroyasu Yamada
+     *
+     */
     private static class Builder implements TrieBuilder {
+        /** ノード */
         private long[] nodes_ ;
+
+        /** コード列の配列 */
         private CodeSequence[] keys_ ;
+
+        /** キーからコード列へのマップ */
         private int[] codemap_ ;
+
+        /** TAIL配列 **/
         private Tail tail_ ;
+
+        /** TAIL配列のサイズ **/
         private int tail_size_ ;
-        /** 最初の空きノードの位置 */
+
+        /** 最初の空きノードの位置 **/
         private int first_ ;
 
         private Builder(){
@@ -294,13 +307,14 @@ public class DoubleArrayTrieImpl implements Trie {
             tail_ = null;
         }
 
+        @Override
         public Trie build(List<String> keys){
             if (keys == null)
                 throw new IllegalArgumentException("The list of keys is null.");
             if (checkInvalidKeys(keys))
                 throw new IllegalArgumentException("The list of keys has not been sorted yet, some duplications have been found, or some keys are empty.");
 
-            createCodeMap( keys);
+            createCodeMap(keys); //  キーを捜査して必要なノード数、コードマップを作成する
 
             int i = 0;
             keys_ = new CodeSequence[keys.size()];
@@ -308,7 +322,6 @@ public class DoubleArrayTrieImpl implements Trie {
                 CodeSequence cs = new CodeSequence(key.length());
                 cs.set(key, codemap_);
                 keys_[i++] = cs;
-
             }
 
             initNodes(0);
@@ -321,6 +334,10 @@ public class DoubleArrayTrieImpl implements Trie {
             return trie;
         }
 
+        /**
+         * ノードの列を初期化する
+         * @param begin 初期化するノードの開始位置
+         */
         private void initNodes(int begin){
             assert(nodes_.length >= 2);
             if (begin < 1){
@@ -346,11 +363,17 @@ public class DoubleArrayTrieImpl implements Trie {
             Node.release(node);
         }
 
+        /**
+         * ダブル配列に格納するキーリストに不正なキーがないかどうか調べる。
+         * 不正：未ソート、重複したキーがある、または空のキーがある場合
+         * @param keys 調べるキーのリスト
+         * @return 不正なキーがあればtrue、なければfalse
+         */
         private boolean checkInvalidKeys(List<String> keys){
             int m = keys.size() ;
             for(int i = 0 ; i < m ; i++){
                 String a = keys.get(i);
-                if (a.isEmpty())
+                if (a == null || a.isEmpty())
                     return true;
                 if (i == m - 1)
                     continue;
@@ -361,7 +384,13 @@ public class DoubleArrayTrieImpl implements Trie {
             return false;
         }
 
-
+        /**
+         * ダブル配列を構築する
+         * @param src　親ノードのインデックス
+         * @param begin コード列の開始位置
+         * @param end コード列の終了位置
+         * @param n コード列のインデックス
+         */
         private void build(int src, int begin, int end, int n){
             if (end - begin == 1){ // 分岐がないのでTAIL配列の更新処理を行う
                 addTail(src, begin, n);
@@ -371,6 +400,7 @@ public class DoubleArrayTrieImpl implements Trie {
             List<Integer> children = new ArrayList<Integer>(); // 子ノードのインデックスを格納するリスト
             List<Integer> ranges   = new ArrayList<Integer>(); // 同じ子ノードを持つキーの範囲を保持するリスト　　
 
+            //同一のラベルで遷移するキー列の範囲を調べる
             int i = begin ;
             if (n >= keys_[begin].size_){
                 i = begin + 1 ;
@@ -394,8 +424,10 @@ public class DoubleArrayTrieImpl implements Trie {
             }
             assert(children.size() > 0);
 
-            int base = updates(src, children);
+            int base = updates(src, children); // 子ノードを格納する空きスペースを探し、そのときのベース値を求める
             assert(base > 0);
+
+            // 子ノード以下を深さ有線で再帰的に登録していく
             for(int k = 0; k < children.size(); k++){
                 int ch = children.get(k);
                 int dist = base + ch ;
@@ -403,6 +435,12 @@ public class DoubleArrayTrieImpl implements Trie {
             }
         }
 
+        /**
+         * TAIL配列に要素を追加する。
+         * @param src　親ノードのインデックス
+         * @param begin　TAILに追加するコード列のインデックス
+         * @param n　コード列中、TAILに追加する開始位置
+         */
         private void addTail(int src, int begin, int n){
             Node node  = Node.create(nodes_[src]);
             assert(! node.isFree());
@@ -410,13 +448,14 @@ public class DoubleArrayTrieImpl implements Trie {
                 int b = tail_.add(keys_[begin].sequence_, n, keys_[begin].size_);
                 node.tail(b);
             } else {
+                //追加するものがなければ終端処理
                 node.terminate();
             }
             nodes_[src] = node.encode();
             Node.release(node);
         }
 
-        int updates(int src, List<Integer> children){
+        private int updates(int src, List<Integer> children){
             int base = searchFreeSpace(children);
             Node node = Node.create(nodes_[src]);
             node.base(base);
@@ -436,10 +475,13 @@ public class DoubleArrayTrieImpl implements Trie {
             return base;
         }
 
+        /**
+         * 空きノードのlinked list の状態を更新する
+         * @param prev　前の空きノードのインデックス
+         * @param next 次の空きノードのインデックス
+         */
         private void updateFreeSpaceLink(int prev, int next){
             assert(prev < next);
-            //assert(prev > 1);
-            // assert(next > 1);
             if (prev > 1){
                 Node p = Node.create(nodes_[prev]);
                 assert(p.isFree());
@@ -456,6 +498,11 @@ public class DoubleArrayTrieImpl implements Trie {
             }
         }
 
+        /**
+         * 子ノードすべてが格納できる空きノードとそのときのBASE値を求める
+         * @param children 子ノードのリスト
+         * @return　子ノードすべてを格納可能なBASE値
+         */
         private int searchFreeSpace(List<Integer> children){
             Node free = Node.create(nodes_[first_]);
             Node node = Node.create();
@@ -467,14 +514,13 @@ public class DoubleArrayTrieImpl implements Trie {
                 free.decode(nodes_[start]);
             }
 
-
             boolean find = false;
             assert(free.isFree());
             while(! find ){
                 find = true;
                 int child = children.get(0);
                 base = start - child;
-                resize(base + children.get(children.size()-1) + 1);
+                resize(base + children.get(children.size()-1) + 1); // ノードが足りなくなったら拡張する
 
                 for(int i = 0; i < children.size(); i++){
                     child = children.get(i);
@@ -494,7 +540,10 @@ public class DoubleArrayTrieImpl implements Trie {
             return base;
         }
 
-
+        /**
+         * キーリストを深さ優先で探索し、コードマップ、必要ノード数の概算、必要TAIL配列のサイズを求める
+         * @param keys キーリスト　
+         */
         private void createCodeMap(List<String> keys){
             Map<Character, Integer> map = new TreeMap<Character, Integer>();
 
@@ -507,14 +556,14 @@ public class DoubleArrayTrieImpl implements Trie {
                     max = c ;
             }
             int[] codemap = new int[max+1];
-            int i = 1;
+
             for(Entry<Character, Integer> e : map.entrySet()){
                 int c = 0x0000FFFF  & e.getKey();
                 codemap[c] = e.getValue();
             }
             codemap_ = codemap ;
-            System.err.println("estimation of the initail #nodes: " +  num_nodes);
-            System.err.println("estimation of #tails: " +  tail_size_);
+            // System.err.println("estimation of the initail #nodes: " +  num_nodes);
+            // System.err.println("estimation of #tails: " +  tail_size_);
             nodes_ = new long[num_nodes + 2];
             tail_ = new Tail(tail_size_);
         }
@@ -568,13 +617,15 @@ public class DoubleArrayTrieImpl implements Trie {
             return num ;
         }
 
+        /**
+         * 必要に応じてダブル配列の格納場所を拡張する
+         * @param size 必要なサイズ
+         */
         private void resize(int size){
             if (size < nodes_.length)
                 return ;
             int b = nodes_.length;
-
             long[] nodes = new long[(int)(size*1.5)+1];
-            System.err.println("** resize ** " + b + " -> " + nodes.length);
             System.arraycopy(nodes_, 0, nodes, 0, nodes_.length);
             nodes_ = nodes ;
             initNodes(b);
