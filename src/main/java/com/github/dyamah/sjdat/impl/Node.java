@@ -51,16 +51,80 @@ final class Node {
         if (node == null)
             return ;
         List<Node> pool = thl.get();
-        node.decode(0x4000000000000000L);
-        pool.add(node);
+        if (pool.size() < DEFAULT_POOL_SIZE){
+            node.decode(0x4000000000000000L);
+            pool.add(node);
+        }
     }
-
 
     static private long FREE_MASK        = 0x4000000000000000L;
     static private long TERMINATION_MASK = 0x2000000000000000L;
     static private long TAIL_MASK        = 0x1000000000000000L;
     static private long BASE_MASK        = 0x0FFFFFFFC0000000L;
     static private long CHECK_MASK       = 0x000000003FFFFFFFL;
+
+    /**
+     * ノードが空きノードかどうか調べる
+     * @param node ノードのエンコード値
+     * @return 空きノードであればtrue, そうでなければfalse
+     */
+    static boolean FREE(long node) {
+        return (node & FREE_MASK) != 0L ;
+    }
+
+    /**
+     * ノードのベース値を返す
+     * @param node ノードのエンコード値
+     * @return 設定されていればBASE値を、未設定の場合は0を返す
+     */
+    static int BASE(long node){
+        if ((node & FREE_MASK) == 0L)
+            return (int) ((BASE_MASK & node) >> 30) ;
+        return 0;
+    }
+
+    /**
+     * ノードのCHECK値を返す
+     * @param node ノードのエンコード値
+     * @return 設定されていればCHECK値、未設定の場合は0を返す。
+     */
+    static int CHECK(long node){
+        if ((node & FREE_MASK) == 0L)
+            return (int) (CHECK_MASK & node) ;
+        return 0;
+    }
+
+    /**
+     * ノードが終端かどうか調べる
+     * @param node ノードのエンコード値
+     * @return 終端ノードであればtrue、そうでなければ false
+     */
+    static boolean TERMINAL(long node){
+        return (node & TERMINATION_MASK) != 0L;
+    }
+
+    /**
+     * ノードのTAIL配列の開始インデックスを求める
+     * @param node ノードのエンコード値
+     * @return TAIL配列の開始インデックス。なければ-1を返す
+     */
+    static int TAIL(long node){
+        if ((node & TAIL_MASK) == 0L)
+            return -1;
+        return (int) ((BASE_MASK & node) >> 30) ;
+    }
+
+    /**
+     * 次の空きノードのインデックスを返す
+     * @param node ノードのエンコード値
+     * @return 空きノードのインデックス。なければ-1を返す
+     */
+    static int NEXT(long node){
+        if ((node & FREE_MASK) == 0L)
+            return -1;
+        return (int) (CHECK_MASK & node);
+    }
+
 
     private long free_ ;
     private long termination_;

@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
 
-
 import com.github.dyamah.sjdat.Trie;
 import com.github.dyamah.sjdat.TrieBuilder;
 
@@ -64,37 +63,26 @@ public class DoubleArrayTrieImpl implements Trie {
         CodeSequence cs = thl.get();
         cs.set(key, codemap_);
 
-        int s = ROOT ;
+        int src = ROOT ;
         int pos = 0 ;
-        Node src = Node.create();
-        Node dist = Node.create();
-        src.decode(nodes_[s]);
+
         while (pos < cs.size_){
-            int base = src.base();
-            int d = base + cs.sequence_[pos];
-            if (d < nodes_.length){
-                dist.decode(nodes_[d]);
-                if (s == dist.check()){
+            int dist = Node.BASE(nodes_[src]) + cs.sequence_[pos];
+            if (dist < nodes_.length){
+                if (src == Node.CHECK(nodes_[dist])){
                     pos ++ ;
-                    src.decode(nodes_[d]) ;
-                    s = d;
+                    src = dist;
                     continue;
                 }
             }
-            int t = src.tail();
-            Node.release(src);
-            Node.release(dist);
+            int t = Node.TAIL(nodes_[src]);
             if (t >= 0 && tails_.match(t, pos, cs.size_, cs.sequence_))
-                return s;
+                return src;
             return UNKNOWN_ID;
         }
-        if (src.isTerminal()){
-            Node.release(src);
-            Node.release(dist);
-            return s;
-        }
-        Node.release(src);
-        Node.release(dist);
+        if (Node.TERMINAL(nodes_[src]))
+            return src;
+
         return UNKNOWN_ID;
     }
 
@@ -130,13 +118,10 @@ public class DoubleArrayTrieImpl implements Trie {
     @Override
     public int numberOfKeys() {
         int m = 0;
-        Node node = Node.create();
         for(int i = 2; i < nodes_.length; i++){
-            node.decode(nodes_[i]);
-            if (node.isTerminal())
+            if (Node.TERMINAL(nodes_[i]))
                 m++ ;
         }
-        Node.release(node);
         return m + tails_.numberOfKeys();
     }
 
@@ -150,8 +135,7 @@ public class DoubleArrayTrieImpl implements Trie {
     public int numberOfFreeNodes() {
         int m = 0 ;
         for(int i = 2; i < nodes_.length; i++){
-            Node node = Node.create(nodes_[i]);
-            if (node.isFree())
+            if (Node.FREE(nodes_[i]))
                 m++;
         }
         return m;
@@ -295,7 +279,7 @@ public class DoubleArrayTrieImpl implements Trie {
         private int tail_size_ ;
 
         /** 最初の空きノードの位置 **/
-        private int first_ ;
+        private int free_node_ ;
 
         private Builder(){
             nodes_ = null;
@@ -338,26 +322,22 @@ public class DoubleArrayTrieImpl implements Trie {
         private void initNodes(int begin){
             assert(nodes_.length >= 2);
             if (begin < 1){
-                Node root = Node.create();
+                Node root = new Node();
                 root.base(1);
                 root.check(0);
                 nodes_[0] = root.encode();
                 nodes_[1] = root.encode();
                 begin = 2;
-                Node.release(root);
-                first_ = 2;
+                free_node_ = 2;
             }
-            Node node = Node.create();
+            Node node = new Node();
             for(int i = begin; i < nodes_.length; i++){
-                Node prev = Node.create(nodes_[i-1]);
                 int p = 0;
-                if (prev.isFree())
+                if (Node.FREE(nodes_[i-1]))
                     p = i-1;
                 node.updateFreeSpaceLink(p, i+1);
                 nodes_[i] = node.encode();
-                Node.release(prev);
             }
-            Node.release(node);
         }
 
         /**
@@ -398,14 +378,15 @@ public class DoubleArrayTrieImpl implements Trie {
             List<Integer> ranges   = new ArrayList<Integer>(); // 同じ子ノードを持つキーの範囲を保持するリスト　　
 
             //同一のラベルで遷移するキー列の範囲を調べる
+
             int i = begin ;
             if (n >= keys_[begin].size_){
+                Node node = new Node();
                 i = begin + 1 ;
-                Node node = Node.create(nodes_[src]);
+                node.decode(nodes_[src]);
                 assert(! node.isFree());
                 node.terminate();
                 nodes_[src] = node.encode();
-                Node.release(node);
             }
             ranges.add(i);
             while(i < end){
@@ -439,7 +420,7 @@ public class DoubleArrayTrieImpl implements Trie {
          * @param n　コード列中、TAILに追加する開始位置
          */
         private void addTail(int src, int begin, int n){
-            Node node  = Node.create(nodes_[src]);
+            Node node = new Node(nodes_[src]);
             assert(! node.isFree());
             if (n < keys_[begin].size_){
                 int b = tail_.add(keys_[begin].sequence_, n, keys_[begin].size_);
@@ -449,26 +430,24 @@ public class DoubleArrayTrieImpl implements Trie {
                 node.terminate();
             }
             nodes_[src] = node.encode();
-            Node.release(node);
         }
 
         private int updates(int src, List<Integer> children){
             int base = searchFreeSpace(children);
-            Node node = Node.create(nodes_[src]);
+            Node node = new Node(nodes_[src]);
             node.base(base);
             nodes_[src] = node.encode();
             for(int k = 0; k < children.size(); k++){
                 int dist = base + children.get(k);
                 node.decode(nodes_[dist]);
                 assert(node.isFree());
-                if (dist == first_)
-                    first_ = node.next();
+                if (dist == free_node_)
+                    free_node_ = node.next();
 
                 updateFreeSpaceLink(node.prev(), node.next());
                 node.check(src);
                 nodes_[dist] = node.encode();
             }
-            Node.release(node);
             return base;
         }
 
@@ -480,18 +459,16 @@ public class DoubleArrayTrieImpl implements Trie {
         private void updateFreeSpaceLink(int prev, int next){
             assert(prev < next);
             if (prev > 1){
-                Node p = Node.create(nodes_[prev]);
+                Node p = new Node(nodes_[prev]);
                 assert(p.isFree());
                 p.updateFreeSpaceLink(p.prev(), next);
                 nodes_[prev] = p.encode();
-                Node.release(p);
             }
             if (next < nodes_.length){
-                Node n = Node.create(nodes_[next]);
+                Node n = new Node(nodes_[next]);
                 assert(n.isFree());
                 n.updateFreeSpaceLink(prev, n.next());
                 nodes_[next] = n.encode();
-                Node.release(n);
             }
         }
 
@@ -501,39 +478,30 @@ public class DoubleArrayTrieImpl implements Trie {
          * @return　子ノードすべてを格納可能なBASE値
          */
         private int searchFreeSpace(List<Integer> children){
-            Node free = Node.create(nodes_[first_]);
-            Node node = Node.create();
-            int start = first_ ;
-            int base = 1;
 
-            while (start - children.get(0) < 1){
-                start = free.next();
-                free.decode(nodes_[start]);
-            }
+            int start = free_node_ ;
+
+            int num_children = children.size();
+            int fc = children.get(0);
+            int lc = children.get(num_children-1);
+
+            while (start - fc < 1)
+                start = Node.NEXT(nodes_[start]);
 
             boolean find = false;
-            assert(free.isFree());
+            int base = start - fc;
             while(! find ){
                 find = true;
-                int child = children.get(0);
-                base = start - child;
-                resize(base + children.get(children.size()-1) + 1); // ノードが足りなくなったら拡張する
-
-                for(int i = 0; i < children.size(); i++){
-                    child = children.get(i);
-                    node.decode(nodes_[base + child]);
-                    if (node.isFree())
+                base = start - fc;
+                resize(base + lc + 1); // ノードが足りなくなったら拡張する
+                for(int i = 1; i < num_children; i++){
+                    if (Node.FREE(nodes_[base + children.get(i)]))
                         continue;
-
                     find = false ;
-                    start = free.next();
-                    free.decode(nodes_[start]);
-                    assert(free.isFree());
+                    start = Node.NEXT(nodes_[start]);
                     break ;
                 }
             }
-            Node.release(free);
-            Node.release(node);
             return base;
         }
 
@@ -554,9 +522,11 @@ public class DoubleArrayTrieImpl implements Trie {
             }
             int[] codemap = new int[max+1];
 
+
             for(Entry<Character, Integer> e : map.entrySet()){
                 int c = 0x0000FFFF  & e.getKey();
                 codemap[c] = e.getValue();
+                // codemap[c] = i++;
             }
             codemap_ = codemap ;
             nodes_ = new long[num_nodes + 2];
