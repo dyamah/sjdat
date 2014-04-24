@@ -1,7 +1,5 @@
 /**
- * 
- */
-/**
+ * Trieインターフェースパッケージ
  * @author Hiroyasu Yamada
  *
  */

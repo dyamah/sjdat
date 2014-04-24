@@ -228,6 +228,7 @@ public class DoubleArrayTrieImpl implements Trie {
                     m++;
             return m ;
         }
+
         /**
          * コード列をTAIL配列に追加する
          * @param sequence 追加するコード列
@@ -239,20 +240,14 @@ public class DoubleArrayTrieImpl implements Trie {
             assert(begin < end);
             assert(sequence != null);
             int len = end - begin + 1;
-
             assert(begin_ + len <= sequence_.length);
-//            if (begin_ + len > sequence_.length){
-//                int[] x = new int[(int)((begin_ + len) * 4)];
-//                System.err.println("!!!! tail extention !!!!");
-//                System.arraycopy(sequence_, 0, x, 0, sequence_.length);
-//                sequence_ = x ;
-//            }
             int b = begin_ ;
             for(int i = begin ; i < end; i++)
                 sequence_[begin_++] = sequence[i];
             sequence_[begin_++] = -1;
             return b ;
         }
+
         /**
          * TAIL部分がマッチするかどうか調べる
          * @param head 調べるTAILの先頭位置
@@ -511,7 +506,6 @@ public class DoubleArrayTrieImpl implements Trie {
             int start = first_ ;
             int base = 1;
 
-            //assert(start - children.get(0) > 0);
             while (start - children.get(0) < 1){
                 start = free.next();
                 free.decode(nodes_[start]);
@@ -565,8 +559,6 @@ public class DoubleArrayTrieImpl implements Trie {
                 codemap[c] = e.getValue();
             }
             codemap_ = codemap ;
-            // System.err.println("estimation of the initail #nodes: " +  num_nodes);
-            // System.err.println("estimation of #tails: " +  tail_size_);
             nodes_ = new long[num_nodes + 2];
             tail_ = new Tail(tail_size_);
         }

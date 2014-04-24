@@ -1,7 +1,5 @@
 /**
- * 
- */
-/**
+ * ツール群パッケージ
  * @author Hiroyasu Yamada
  *
  */
