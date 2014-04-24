@@ -26,7 +26,7 @@ public class MkTrie {
             reader = new BufferedReader(new InputStreamReader(new FileInputStream(file)));
             keys = new ArrayList<String>();
 
-            bm.start("[Read]");
+            bm.start("[Reading keys]");
             String line = null;
             while((line = reader.readLine()) != null)
                 keys.add(line);
@@ -44,7 +44,7 @@ public class MkTrie {
     static Trie buildTrie(List<String> keys){
         TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
 
-        bm.start("[Build]");
+        bm.start("[Building Trie]");
         Trie trie = builder.build(keys);
         bm.stop();
 
@@ -54,7 +54,7 @@ public class MkTrie {
     static void checkTrie(Trie trie, List<String> keys){
         Map<Integer, String> map = new TreeMap<Integer,String>();
 
-        bm.start("[Check]");
+        bm.start("[Check Trie]");
         for(String key: keys){
             int id = trie.lookup(key);
 
@@ -67,9 +67,7 @@ public class MkTrie {
     }
 
     static void save(Trie trie, File file){
-
         try {
-
             bm.start("[Save]");
             trie.save(file);
             bm.stop();
@@ -85,7 +83,7 @@ public class MkTrie {
      */
     public static void main(String[] args) {
         if (args.length < 2){
-            System.err.println("usage: com.github.dyamah.sjdat.tools.MkTrie input output");
+            System.err.println("usage: com.github.dyamah.sjdat.tools.MkTrie keys trie");
             System.exit(1);
         }
         bm.showHeader();
@@ -95,7 +93,7 @@ public class MkTrie {
         save(trie, new File(args[1]));
         bm.showTotal();
         System.err.println();
-        System.err.println("Trie Info.");
+        System.err.println("<< Trie Info. >>");
         System.err.println("\t#keys      : " + trie.numberOfKeys());
         System.err.println("\t#nodes     : " + trie.numberOfNodes());
         System.err.println("\t#free nodes: " + trie.numberOfFreeNodes());

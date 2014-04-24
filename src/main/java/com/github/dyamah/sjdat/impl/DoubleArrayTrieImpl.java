@@ -87,6 +87,53 @@ public class DoubleArrayTrieImpl implements Trie {
     }
 
     @Override
+    public void commonPrefixSearch(String key, int[] out){
+        if (key == null || key.isEmpty())
+            return ;
+        if (out == null || out.length < key.length())
+            throw new IllegalArgumentException("The output array is null, or the size of output is less than the length of the key.");
+
+        CodeSequence cs = thl.get();
+        cs.set(key, codemap_);
+
+        int src = ROOT ;
+        int pos = 0 ;
+        for(int i = 0 ; i < out.length; i++)
+            out[i] = 0 ;
+
+
+        while (pos < cs.size_){
+            int dist = Node.BASE(nodes_[src]) + cs.sequence_[pos];
+            if (dist < nodes_.length){
+                if (src == Node.CHECK(nodes_[dist])){
+                    if (Node.TERMINAL(nodes_[dist]))
+                        out[pos] = dist ;
+                    pos ++ ;
+                    src = dist;
+                    continue;
+                }
+            }
+            int t = Node.TAIL(nodes_[src]);
+            if (t >= 0){
+                for(; pos < cs.size_ ; pos++){
+                    if (cs.sequence_[pos] == tails_.sequence_[t]){
+                        t++;
+                        continue;
+                    }
+                    if (tails_.sequence_[t] < 0)
+                        out[pos-1] = src ;
+                    return;
+                }
+                if (tails_.sequence_[t] < 0)
+                    out[pos-1] = src;
+            }
+            break ;
+        }
+        // if (Node.TERMINAL(nodes_[src]))
+           //  out[pos] = src;
+    }
+
+    @Override
     public void save(File file) throws IOException {
         if (file == null)
             throw new IllegalArgumentException("The file is null.");
@@ -526,7 +573,6 @@ public class DoubleArrayTrieImpl implements Trie {
             for(Entry<Character, Integer> e : map.entrySet()){
                 int c = 0x0000FFFF  & e.getKey();
                 codemap[c] = e.getValue();
-                // codemap[c] = i++;
             }
             codemap_ = codemap ;
             nodes_ = new long[num_nodes + 2];

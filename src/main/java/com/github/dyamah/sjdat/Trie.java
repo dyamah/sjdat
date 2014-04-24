@@ -15,6 +15,13 @@ public interface Trie {
      */
     public int lookup(String key);
 
+    /**
+     * 共通部分接頭辞を探索する
+     * @param key 探索するキー
+     * @param out 探索結果の配列。この配列がキーの文字インデックスに対応しており、out[i]が非負の時、先頭からi文字目までの共通接頭辞がtrieに登録されていたことを意味する。
+     * out の長さがkey.length()より短い場合やnullの場合は IllegalArgumentExceptionをスロー
+     */
+    public void commonPrefixSearch(String key, int[] out);
 
     /**
      * Trieをファイルにセーブする

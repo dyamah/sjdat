@@ -25,7 +25,7 @@ public class DoubleArrayTrieImplTest extends TestCase {
         assertNotNull(DoubleArrayTrieImpl.createBuilder());
     }
 
-    public void testLookup() {
+    public void testLookup00() {
         TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
         List<String> keys = new ArrayList<String>();
         keys.add("あり");
@@ -51,6 +51,24 @@ public class DoubleArrayTrieImplTest extends TestCase {
         assertEquals(true, id1 != id2);
 
         assertEquals(true, trie.lookup("ありがとうご") == Trie.UNKNOWN_ID);
+
+    }
+
+    public void testLookup01() {
+        TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+        List<String> keys = new ArrayList<String>();
+        keys.add("a");
+        keys.add("b");
+        keys.add("cde");
+        keys.add("cde efnlainerkfalirnelkadsf naldfk n");
+        keys.add("dde");
+        Trie trie = builder.build(keys);
+
+        assertEquals(5, trie.numberOfKeys());
+        assertEquals(true, trie.numberOfNodes() > 2);
+
+        assertEquals(true, trie.lookup("cde") > 0);
+        assertEquals(true, trie.lookup("cde ") == Trie.UNKNOWN_ID);
 
     }
 
@@ -355,5 +373,175 @@ public class DoubleArrayTrieImplTest extends TestCase {
         assertEquals(true, trie.lookup("cccccc") == Trie.UNKNOWN_ID);
         assertEquals(true, trie.lookup("cccc") == Trie.UNKNOWN_ID);
         assertEquals(true, trie.lookup("ccc") > 0);
+    }
+
+    public void testCommonPrefixSearch00() {
+
+        TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+        List<String> keys = new ArrayList<String>();
+        keys.add("a");
+        keys.add("ab");
+        keys.add("abc");
+        keys.add("efg");
+        Trie trie = builder.build(keys);
+
+        {
+            int[] out = new int[10];
+            assertEquals(10, out.length);
+            for(int i = 0 ; i < 10; i++)
+                assertEquals(0, out[i]);
+            trie.commonPrefixSearch(null, out);
+            assertEquals(10, out.length);
+            for(int i = 0 ; i < 10; i++)
+                assertEquals(0, out[i]);
+        }
+
+        {
+            int[] out = new int[10];
+            assertEquals(10, out.length);
+            for(int i = 0 ; i < 10; i++)
+                assertEquals(0, out[i]);
+            trie.commonPrefixSearch("", out);
+            assertEquals(10, out.length);
+            for(int i = 0 ; i < 10; i++)
+                assertEquals(0, out[i]);
+        }
+
+        {
+            try {
+                trie.commonPrefixSearch("ありがとう", null);
+                fail("");
+            } catch (IllegalArgumentException e){
+                assertEquals("The output array is null, or the size of output is less than the length of the key.", e.getMessage());
+            } catch (Exception e){
+                fail("");
+            }
+
+            try {
+                trie.commonPrefixSearch("ありがとう", new int[4]);
+                fail("");
+            } catch (IllegalArgumentException e){
+                assertEquals("The output array is null, or the size of output is less than the length of the key.", e.getMessage());
+            } catch (Exception e){
+                fail("");
+            }
+        }
+
+        {
+            int[] out = new int[5];
+            assertEquals(5, out.length);
+            for(int i = 0 ; i < 5; i++)
+                assertEquals(0, out[i]);
+            trie.commonPrefixSearch("ありがとう", out);
+            assertEquals(5, out.length);
+            for(int i = 0 ; i < 5; i++)
+                assertEquals(0, out[i]);
+        }
+
+        {
+            int[] out = new int[5];
+            assertEquals(5, out.length);
+            for(int i = 0 ; i < 5; i++)
+                assertEquals(0, out[i]);
+            trie.commonPrefixSearch("abc", out);
+            assertEquals(5, out.length);
+            assertEquals(true, out[0] > 0);
+            assertEquals(true, out[1] > 0);
+            assertEquals(true, out[2] > 0);
+            assertEquals(true, out[3] == 0);
+            assertEquals(true, out[4] == 0);
+
+            trie.commonPrefixSearch("ab", out);
+            assertEquals(5, out.length);
+            assertEquals(true, out[0] > 0);
+            assertEquals(true, out[1] > 0);
+            assertEquals(true, out[2] == 0);
+            assertEquals(true, out[3] == 0);
+            assertEquals(true, out[4] == 0);
+
+            trie.commonPrefixSearch("efg", out);
+            assertEquals(5, out.length);
+            assertEquals(true, out[0] == 0);
+            assertEquals(true, out[1] == 0);
+            assertEquals(true, out[2] > 0);
+            assertEquals(true, out[3] == 0);
+            assertEquals(true, out[4] == 0);
+
+            trie.commonPrefixSearch("efga", out);
+            assertEquals(5, out.length);
+            assertEquals(true, out[0] == 0);
+            assertEquals(true, out[1] == 0);
+            assertEquals(true, out[2] > 0);
+            assertEquals(true, out[3] == 0);
+            assertEquals(true, out[4] == 0);
+
+            out = new int[100];
+            trie.commonPrefixSearch("efgabcdef  gielinaldkiiepngaksdf", out);
+            assertEquals(100, out.length);
+            assertEquals(true, out[0] == 0);
+            assertEquals(true, out[1] == 0);
+            assertEquals(true, out[2] > 0);
+            assertEquals(true, out[3] == 0);
+            for(int i = 4; i < 100; i++)
+                assertEquals(true, out[i] == 0);
+        }
+    }
+
+    public void testCommonPrefixSearch01() {
+
+        TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+        List<String> keys = new ArrayList<String>();
+        keys.add("a");
+        keys.add("b");
+        keys.add("c ai");
+        keys.add("c aif eoinalsdfiinels  aisdinflasindfl");
+        keys.add("d");
+        Trie trie = builder.build(keys);
+        int[] out = new int[100];
+        trie.commonPrefixSearch("c aif", out);
+        assertEquals(100, out.length);
+        assertEquals(true, out[0] == 0);
+        assertEquals(true, out[1] == 0);
+        assertEquals(true, out[2] == 0);
+        assertEquals(true, out[3]  > 0);
+        for(int i = 4; i < 100; i++)
+            assertEquals(true, out[i] == 0);
+    }
+
+    public void testCommonPrefixSearch02() {
+
+        TrieBuilder builder = DoubleArrayTrieImpl.createBuilder();
+        List<String> keys = new ArrayList<String>();
+        keys.add("abc");
+        keys.add("abcd");
+        keys.add("abce");
+
+        Trie trie = builder.build(keys);
+        int[] out = new int[5];
+        assertEquals(true, trie.lookup("abcde") == Trie.UNKNOWN_ID);
+        trie.commonPrefixSearch("abcde", out);
+        assertEquals(5, out.length);
+        assertEquals(true, out[0] == 0);
+        assertEquals(true, out[1] == 0);
+        assertEquals(true, out[2]  > 0);
+        assertEquals(true, out[3]  > 0);
+        assertEquals(true, out[4] == 0);
+
+        trie.commonPrefixSearch("abcd", out);
+        assertEquals(5, out.length);
+        assertEquals(true, out[0] == 0);
+        assertEquals(true, out[1] == 0);
+        assertEquals(true, out[2]  > 0);
+        assertEquals(true, out[3]  > 0);
+        assertEquals(true, out[4] == 0);
+
+        trie.commonPrefixSearch("abc", out);
+        assertEquals(5, out.length);
+        assertEquals(true, out[0] == 0);
+        assertEquals(true, out[1] == 0);
+        assertEquals(true, out[2]  > 0);
+        assertEquals(true, out[3] == 0);
+        assertEquals(true, out[4] == 0);
+
     }
 }

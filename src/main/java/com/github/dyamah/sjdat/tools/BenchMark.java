@@ -9,7 +9,7 @@ import java.text.DecimalFormat;
 
 public class BenchMark {
     private static final DecimalFormat DFORMAT = new DecimalFormat(".#");
-    private static final String HEADER = "                \t    time [ms]\t  memory [kb]";
+    private static final String HEADER = "     -- State --\t    time [ms]\t  memory [kb]";
     private long peek_memory_;
     private long total_time_ ;
     private long start_memory_ ;
@@ -49,7 +49,7 @@ public class BenchMark {
     public void showTotal(){
         if (out_ == null)
             return ;
-        out_.printf("%16s", "[TOTAL]");
+        out_.printf("%16s", "-- TOTAL --");
         out_.printf("\t%13s", total_time_);
         out_.printf("\t%13s", DFORMAT.format((double)peek_memory_ / 1024));
         out_.println();
