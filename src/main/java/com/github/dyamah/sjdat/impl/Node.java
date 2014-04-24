@@ -7,56 +7,6 @@ import java.util.List;
 
 final class Node {
 
-    static private final int DEFAULT_POOL_SIZE = 100;
-
-    /** 高速化用オブジェクトプール */
-    private static ThreadLocal<List<Node>> thl = new ThreadLocal<List<Node>>() {
-        @Override
-        protected synchronized List<Node> initialValue(){
-            List<Node> iv = new ArrayList<Node>(DEFAULT_POOL_SIZE);
-            for(int i = 0 ; i < DEFAULT_POOL_SIZE ; i++)
-                iv.add(new Node());
-            return iv;
-        }
-    };
-
-    /**
-     * プールからオブジェクトを生成する。関数内部で局所的に利用するときにのみ利用する。また利用が終わったオブジェクトはrelease(Node)でリリースすること
-     * @return　ノードオブジェクト
-     */
-    static Node create() {
-        List<Node> pool = thl.get();
-        if (pool.size() == 0)
-            for(int  i = 0 ; i < DEFAULT_POOL_SIZE; i++)
-                pool.add(new Node());
-        return pool.remove(pool.size() - 1);
-    }
-
-    /**
-     * プールから初期化値でオブジェクトを生成する。関数内部で局所的に利用するときにのみ利用する。また利用が終わったオブジェクトはrelease(Node)でリリースすること
-     * @param value 初期化値
-     * @return　ノードオブジェクト
-     */
-    static Node create(long value) {
-        Node node = create();
-        node.decode(value);
-        return node;
-    }
-
-    /**
-     * 利用済みオブジェクトを開放する。
-     * @param node 開放するオブジェクト。nullの時はなにもしない。
-     */
-    static void release(Node node) {
-        if (node == null)
-            return ;
-        List<Node> pool = thl.get();
-        if (pool.size() < DEFAULT_POOL_SIZE){
-            node.decode(0x4000000000000000L);
-            pool.add(node);
-        }
-    }
-
     static private long FREE_MASK        = 0x4000000000000000L;
     static private long TERMINATION_MASK = 0x2000000000000000L;
     static private long TAIL_MASK        = 0x1000000000000000L;
