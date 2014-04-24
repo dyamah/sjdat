@@ -1,10 +1,5 @@
 package com.github.dyamah.sjdat.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-
-
 final class Node {
 
     static private long FREE_MASK        = 0x4000000000000000L;
