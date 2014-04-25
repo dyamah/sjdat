@@ -15,7 +15,7 @@ import com.github.dyamah.sjdat.Trie;
 import com.github.dyamah.sjdat.TrieBuilder;
 import com.github.dyamah.sjdat.impl.DoubleArrayTrieImpl;
 
-public class MkTrie {
+public class CLT {
 
     static BenchMark bm = new BenchMark();
 
