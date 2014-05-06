@@ -232,7 +232,7 @@ final class Node {
     void updateFreeSpaceLink(int prev, int next){
 
         if (free_ == FREE_MASK && prev < next){
-            if (prev < 0 || next < 0)
+            if (prev < 0)
                 return ;
             base_ = prev;
             check_ = next;

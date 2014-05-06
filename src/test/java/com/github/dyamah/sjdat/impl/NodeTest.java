@@ -534,6 +534,27 @@ public class NodeTest extends TestCase {
 
 
         }
+
+        {
+            Node node = new Node();
+            assertEquals(true, node.isFree());
+            assertEquals( 0, node.prev());
+            assertEquals( 0, node.next());
+            assertEquals(true, node.isFree());
+
+            node.updateFreeSpaceLink(-2, -1);
+
+            assertEquals(0, node.prev());
+            assertEquals(0, node.next());
+            assertEquals(0, Node.NEXT(node.encode()));
+
+            node.updateFreeSpaceLink(-1, 0);
+
+            assertEquals(0, node.prev());
+            assertEquals(0, node.next());
+            assertEquals(0, Node.NEXT(node.encode()));
+
+        }
     }
 
 }
