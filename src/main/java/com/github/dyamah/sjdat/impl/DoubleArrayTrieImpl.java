@@ -67,11 +67,11 @@ public class DoubleArrayTrieImpl implements Trie {
         int pos = 0 ;
 
         while (pos < cs.size_){
-            int dist = Node.BASE(nodes_[src]) + cs.sequence_[pos];
-            if (dist < nodes_.length){
-                if (src == Node.CHECK(nodes_[dist])){
+            int dest = Node.BASE(nodes_[src]) + cs.sequence_[pos];
+            if (dest < nodes_.length){
+                if (src == Node.CHECK(nodes_[dest])){
                     pos ++ ;
-                    src = dist;
+                    src = dest;
                     continue;
                 }
             }
@@ -103,13 +103,13 @@ public class DoubleArrayTrieImpl implements Trie {
 
 
         while (pos < cs.size_){
-            int dist = Node.BASE(nodes_[src]) + cs.sequence_[pos];
-            if (dist < nodes_.length){
-                if (src == Node.CHECK(nodes_[dist])){
-                    if (Node.TERMINAL(nodes_[dist]))
-                        out[pos] = dist ;
+            int dest = Node.BASE(nodes_[src]) + cs.sequence_[pos];
+            if (dest < nodes_.length){
+                if (src == Node.CHECK(nodes_[dest])){
+                    if (Node.TERMINAL(nodes_[dest]))
+                        out[pos] = dest ;
                     pos ++ ;
-                    src = dist;
+                    src = dest;
                     continue;
                 }
             }
@@ -455,8 +455,8 @@ public class DoubleArrayTrieImpl implements Trie {
             // 子ノード以下を深さ有線で再帰的に登録していく
             for(int k = 0; k < children.size(); k++){
                 int ch = children.get(k);
-                int dist = base + ch ;
-                build(dist, ranges.get(k), ranges.get(k+1), n+1);
+                int dest = base + ch ;
+                build(dest, ranges.get(k), ranges.get(k+1), n+1);
             }
         }
 
@@ -485,15 +485,15 @@ public class DoubleArrayTrieImpl implements Trie {
             node.base(base);
             nodes_[src] = node.encode();
             for(int k = 0; k < children.size(); k++){
-                int dist = base + children.get(k);
-                node.decode(nodes_[dist]);
+                int dest = base + children.get(k);
+                node.decode(nodes_[dest]);
                 assert(node.isFree());
-                if (dist == free_node_)
+                if (dest == free_node_)
                     free_node_ = node.next();
 
                 updateFreeSpaceLink(node.prev(), node.next());
                 node.check(src);
-                nodes_[dist] = node.encode();
+                nodes_[dest] = node.encode();
             }
             return base;
         }
